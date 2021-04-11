@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Optical Flow - S.Honi </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+</head>
+
+<body style="background-color: #f1f1f1; min-height: 100vh;">
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/js/all.min.js'> </script>
+
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+            <h1 class="title is-2">Horn & Schunck Algorithm</h1>
+            <h2 class="subtitle is-5">Homework-2 | Digital Video Processing <br></h2> 
+            <h3 class="subtitle is-5">Selahaddin HONİ </h3> 
+      </div>
+    </div>
+  </section>
+
+
+   <div class="section">
+    <div class="container">
+      <h1 class="subtitle is-3 has-text-centered">Implementation</h1>
+      <div class="box">
+        <div class="content">
+          <h3>Usage</h3>
+          <p>
+            <a href="https://github.com/001honi/video-processing/tree/main/homework-2" target="_blank">
+              HornSchunck()</a> class is written in Python. 
+            It returns optical flow velocities (u,v) for given parameters: <br>
+            <ul>
+              <li><strong>alpha :</strong> (float) the regularization coefficient of smoothness constraint </li>
+              <li><strong>maxIter :</strong> (int) maximum number of iterations required to obtain flow velocities </li>
+              <li><strong>applyGauss :</strong> (bool) apply Gaussian smoothing as a preprocess {False by default} </li>
+              <li><strong>GaussKernel :</strong> (tuple) Gaussian Filter kernel size {(15,15) by default} </li>
+            </ul>  
+            Initialize an object of <em>HornSchunck()</em> class with an arbitrary name, <em>optFlow()</em> is suggested.
+            <pre> optFlow = HornSchunck(alpha=alpha,maxIter=maxIter)<br> optFlow.applyGauss  = True <br> optFlow.GaussKernel = (5,5)</pre>
+            
+            Then use <em>estimate()</em> method to calculate optical flow velocities (u,v).
+            After execution, <em>getFlowField()</em> method returns the colorized flow field.
+            <pre> (u,v) = optFlow.estimate(frame1,frame2) <br> flowField = optFlow.getFlowField() </pre>
+            
+            Prediction of target frame from anchor via flow velocities is possible with <em>predict()</em> method. 
+            Moreover, <em>getCollage()</em> method puts 4 frames together to show a collage.
+            <pre> anchorP = optFlow.predict() <br> collage = optFlow.getCollage(f1_idx,f2_idx)</pre>
+
+          </p>
+
+          <h3>Implementation Details</h3>
+        
+            <ul>
+              <li>Gaussian smoothing process is added as an optional preprocessing and highly recommended to
+                apply to obtain better visual saturation on the flow field. </li>
+
+              <li>While calculating the image and temporal derivatives Ex, Ey, Et 
+                below filters are used as a 2D convolution operands.</li>
+              <figure>
+                <img src="assets/filter_derivative.png">
+                <figcaption>
+                  Filters used to calculate derivatives
+                </figcaption>
+              </figure>
+
+              <li>The flow field velocities u and v are initialized with 
+                all zero matrices with a same shape of first given frame.  </li>
+
+              <li>Another 3x3 filter is used for the estimation of the Laplacian of the flow velocities
+                as proposed in the reference paper. [1]
+              </li>
+              <figure>
+                <img src="assets/filter_laplace.png">
+                <figcaption>
+                  Filter used to estimate Laplacian
+                </figcaption>
+              </figure>
+
+              <li>New set of velocity estimates are computed from the estimated derivatives and the average of the previous velocity estimates.
+                Also, smoothing parameter (alpha) placed in the denominator of this iterative update rule. </li>
+              <figure>
+                <img src="assets/update_rule.png" width="450">
+                <figcaption>
+                  Iterative update rule
+                </figcaption>
+              </figure>
+            
+              <li>After observations on the iteration limit, one more condition is added such that if relative error starts
+                 to grow breaks the loop. Max iteration size is no longer an important parameter thanks to this condition. </li>
+
+            </ul>        
+          
+          <h3>Reference Paper</h3>
+          <p>
+            [1] Horn and Schunck. (1981). 
+            <a href="https://www.researchgate.net/publication/222450615_Determining_Optical_Flow" target="_blank">Determining Optical Flow</a>
+          </p>
+
+          <h3>Credits</h3>
+          <p>
+            Utilized from
+            <a href="https://github.com/tomrunia/OpticalFlow_Visualization" target="_blank">OpticalFlow_Visualization</a> by Tom Runia (tomrunia@github)
+            for optical flow field colorization. 
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="section">
+    <div class="container">
+      <h1 class="subtitle is-3 has-text-centered">Observation: Error vs Iteration</h1>
+      <div class="box">
+        <div class="content">
+
+          <h3>Gauss Seidel Approach and Relative Error</h3>
+          <p>In the reference paper, Gauss Seidel approach is proposed to solve the convex optimization problem.
+            However, it is a bit tricky way here that next flow velocities are not directly depend on previous values,
+          but its Laplacian. </p>
+         
+          <figure>
+            <img src="assets/update_rule.png" width="450">
+            <figcaption>
+              Iterative update rule
+            </figcaption>
+          </figure>
+
+          This method can not allow us to calculate absolute error; therefore, relative error is used.
+          For simplification, only flow matrix <em>u</em> is computed due to same characteristics with <em>v</em> matrix.
+          Also, mean of the matrices are used to reach a scalar value. 
+          Below code sample shows how relative error is calculated in this project; where,
+          <em>u</em> is the new calculated matrix and <em>self.u</em> previous.
+          <pre> e = np.mean(np.absolute(u-self.u)) / np.mean(np.absolute(u)) </pre>
+
+        
+          <figure>
+            <img src="assets/error_plot.png" width="750">
+            <figcaption>
+              According to bar figure, below flow fields are generated for iteration numbers of 0, 3, 20 and 30, respectively.
+              Second one is the best.
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="assets/flowField-i0.png"  width="300">
+            <img src="assets/flowField-i3.png"  width="300" >
+            <img src="assets/flowField-i20.png" width="300">
+            <img src="assets/flowField-i30.png" width="300">
+            <figcaption>
+              Flow Field Comparison over Iteration Number
+            </figcaption>
+          </figure>
+
+          <h3>Inference</h3>
+          <p> 
+            It is clearly seen in above observation that there is a strong correlation between iteration number
+            and flow field accuracy. The best optical flow vectors generated with 3 iterations which has the lowest relative error, 
+            in this example. Consequently, one more condition is added such that if relative error starts to grow breaks the Gauss Seidel loop, 
+            as an inference.
+          </p>
+
+              
+
+           
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="section">
+      <div class="container">
+        <h1 class="subtitle is-3 has-text-centered">Preprocess: Gaussian Filter</h1>
+        <div class="box">
+          <div class="content has-text-centered">
+  
+            <h6> 
+              Below figure shows that Gaussian filter application reduces the noise in the frame and 
+              this result in better visual saturation on the flow field. <br> 
+              Gaussian kernel size is (5,5) in this observation. 
+            </h6>
+
+            <figure>
+              <img src="assets/flowField-05-noGauss.png">
+              <img src="assets/flowField-05.png">
+              <figcaption>
+                Comparison of Gaussian filtered flow fields. Filter is applied on the right one. 
+              </figcaption>
+            </figure>     
+
+            <p> Alpha parameter in the both flow fields are 0.5 </p>
+  
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+    <div class="section" id="flow-field">
+      <div class="container">
+        <h1 class="subtitle is-3 has-text-centered">Optical Flow Field</h1>
+        <div class="box">
+          <div class="content has-text-centered">
+
+            <h6>Original video processed in gray level to generate (u,v) optical flow velocities. </h6>
+
+            <figure>
+              <video controls autoplay loop>
+                <source src="assets/original.mp4 " type="video/mp4">
+              </video>
+              <figcaption>
+                Original Video
+              </figcaption>
+            </figure>   
+
+          <hr>
+           <figure>
+             <video controls autoplay loop>
+              <source src="assets/alpha1-GaussKernel5.mp4 " type="video/mp4">
+            </video>
+            <video controls autoplay loop>
+              <source src="assets/alpha10-GaussKernel5.mp4 " type="video/mp4">
+            </video>
+            <video controls autoplay loop>
+              <source src="assets/alpha100-GaussKernel5.mp4 " type="video/mp4">
+            </video>
+             <figcaption>
+              Effect of alpha values on flow field. Alpha equals 1, 10 and 100, respectively.
+             </figcaption>
+           </figure>   
+
+          <hr>
+           <figure>
+            <video controls autoplay loop>
+              <source src="assets/alpha0-GaussKernel5.mp4 " type="video/mp4">
+            </video>
+            <figcaption>
+              The flow field for alpha=0 
+            </figcaption>
+          </figure> 
+   
+ 
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div class="section" id="prediction">
+        <div class="container">
+          <h1 class="subtitle is-3 has-text-centered">Prediction</h1>
+          <div class="box">
+            <div class="content has-text-centered">
+
+              <h6> 
+                First frame selected as anchor and the consecutive one target for each frame pair in the video. 
+                Then, each pixel having non-zero (u,v) vectors in the anchor frame moved towards these vectors
+                  to predict the target frame.  
+              </h6>
+
+              <figure>
+                <video controls autoplay loop>
+                  <source src="assets/ground_truth.mp4 " type="video/mp4">
+                </video>
+                <figcaption>
+                  Ground Truth Video
+                </figcaption>
+              </figure>   
+            
+
+            <hr>
+             <figure>
+               <video controls autoplay loop>
+                <source src="assets/pred-alpha1.mp4 " type="video/mp4">
+              </video>
+              <video controls autoplay loop>
+                <source src="assets/pred-alpha10.mp4 " type="video/mp4">
+              </video>
+              <video controls autoplay loop>
+                <source src="assets/pred-alpha100.mp4 " type="video/mp4">
+              </video>
+               <figcaption>
+                Effect of alpha values on predictions. Alpha equals 1, 10 and 100, respectively.
+               </figcaption>
+             </figure>   
+
+              <hr>
+              <figure>
+                <video controls autoplay loop>
+                  <source src="assets/pred-collage.mp4 " type="video/mp4">
+                </video>
+                <figcaption>
+                  Slow motion of the best prediction result 
+                </figcaption>
+              </figure> 
+   
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="container">
+            <h1 class="subtitle is-3 has-text-centered">
+              Comments on the Smoothing Parameter</h1>
+            <div class="box">
+              <div class="content">
+
+                <h3> Horn and Schunck Smoothness Constraint </h3>
+                <p> 
+                  Smoothing parameter, alpha, is the regularization coefficient of the smoothness constraint in the Horn and Schunck optimization equation.
+                  Alpha is the measurement of the effect of smoothness constraint on the error term. 
+                  This constraint forces flow velocities u and v to be less variable or more stable both in changing area and also time. 
+                </p>
+                  
+                <figure>
+                  <img src="assets/optimization_equation.png" width="450">
+                  <figcaption>
+                    Horn and Schunck Smoothness Constraint
+                  </figcaption>
+                </figure>
+
+                <h3> Effects on the Accuracy of the Flow Field and Prediction</h3>
+                <p> 
+                  Greater alpha resulted in the orientations of the flow velocities to be almost same in the close neighbor area. 
+                  This can be observed as more intense colors on the flow field. To illustrate, train object appears in more stable red color
+                   and calendar purple over growing alpha value, see this <a href="#flow-field">section</a>.              
+                  Keep in mind that down oriented flow vectors shown in purple, up is yellow, right is green and left is red as color codes.
+                </p>
+                <p>
+                  Additionally, more accurate flow field estimates lets the prediction also be more accurate. 
+                  The predicted video can be considered as the twin of the ground truth for the alpha value equals to 100, see this <a href="#prediction">section</a>.  
+                </p>
+
+        
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        <div class="section">
+          <div class="container">
+            <h1 class="subtitle is-3 has-text-centered">Further Comparison with Block Matching</h1>
+            <div class="box">
+              <div class="content has-text-centered">
+
+               <figure>
+                 <video controls autoplay loop>
+                  <source src="assets/comp-bm.mp4" type="video/mp4">
+                </video>
+                <video controls autoplay loop>
+                  <source src="assets/comp-of.mp4 " type="video/mp4">
+                </video>
+              
+                 <figcaption>
+                  Comparison of Block Matching and Optical Flow algorithms
+                 </figcaption>
+               </figure>   
+        
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>
+        April, 2021
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
