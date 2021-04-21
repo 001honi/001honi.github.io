@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motion Parameters - S.Honi </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+</head>
+
+<body style="background-color: #f1f1f1; min-height: 100vh;">
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-2/js/all.min.js'> </script>
+
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+            <h1 class="title is-2">Affine Motion Parameters</h1>
+            <h2 class="subtitle is-5">Homework-3 | Digital Video Processing <br></h2> 
+            <h3 class="subtitle is-5">Selahaddin HONİ </h3> 
+      </div>
+    </div>
+  </section>
+
+
+   <div class="section">
+    <div class="container">
+      <h1 class="subtitle is-3 has-text-centered">Derivation of Pan Motion Model</h1>
+      <div class="box">
+        <div class="content has-text-centered">
+
+          <h6>
+            Pan motion is simply a rotation in y-axis. 
+            Therefore, the motivation is finding a correspondence of ϴy over affine motion parameters.  
+          </h6> 
+          <figure>
+            <img src="assets/latex/pan-1.png" width="300">
+          </figure>
+          <hr>
+
+          <h6>
+            Ry matrix rotates the X, Y, Z coordinates to X', Y', Z' 
+          </h6>
+          <figure>
+            <img src="assets/latex/pan-2.png" width="300">
+          </figure>
+          <hr>
+
+          <h6>
+            Due to perspective projection, 2D coordinates (x,y) can be written in terms of Z and F. 
+          </h6>
+          <figure>
+            <img src="assets/latex/zx.png" width="150">
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <img src="assets/latex/zy.png" width="150">
+          </figure>
+
+          <figure>
+            <img src="assets/latex/pan-3.png" width="500">
+          </figure>
+          <hr>
+
+          <h6>
+            Writing obtained results in matrix form. 
+          </h6>
+
+          <figure>
+            <img src="assets/latex/pan-4.png" width="370">
+          </figure>
+
+          <h6>
+            There is an assumption that transition in pan motion is much less than Z.
+          </h6>
+          <figure>
+            <img src="assets/latex/pan-5.png" width="250">
+          </figure>
+          <hr>
+
+          <h6>
+            Finally, the pan motion corresponds to a1 parameter of affine motion model under given assumption.
+          </h6>
+          <figure>
+            <img src="assets/latex/pan-6.png" width="200">
+          </figure>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="section">
+    <div class="container">
+      <h1 class="subtitle is-3 has-text-centered">Derivation of Tilt Motion Model</h1>
+      <div class="box">
+        <div class="content has-text-centered">
+
+          <h6>
+            Tilt motion is simply a rotation in x-axis. 
+            Therefore, the motivation is finding a correspondence of ϴx over affine motion parameters.  
+          </h6> 
+          <figure>
+            <img src="assets/latex/tilt-1.png" width="300">
+          </figure>
+          <hr>
+
+          <h6>
+            Rx matrix rotates the X, Y, Z coordinates to X', Y', Z' 
+          </h6>
+          <figure>
+            <img src="assets/latex/tilt-2.png" width="300">
+          </figure>
+          <hr>
+
+          <h6>
+            Due to perspective projection, 2D coordinates (x,y) can be written in terms of Z and F. 
+          </h6>
+          <figure>
+            <img src="assets/latex/zx.png" width="150">
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <img src="assets/latex/zy.png" width="150">
+          </figure>
+
+          <figure>
+            <img src="assets/latex/tilt-3.png" width="500">
+          </figure>
+          <hr>
+
+          <h6>
+            Writing obtained results in matrix form. 
+          </h6>
+
+          <figure>
+            <img src="assets/latex/tilt-4.png" width="370">
+          </figure>
+
+          <h6>
+            There is an assumption that transition in tilt motion is much less than Z.
+          </h6>
+          <figure>
+            <img src="assets/latex/tilt-5.png" width="250">
+          </figure>
+          <hr>
+
+          <h6>
+            Finally, the tilt motion corresponds to a4 parameter of affine motion model under given assumption.
+          </h6>
+          <figure>
+            <img src="assets/latex/tilt-6.png" width="200">
+          </figure>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="section">
+    <div class="container">
+      <h1 class="subtitle is-3 has-text-centered">Parameter Extraction via Flow Vectors</h1>
+      <div class="box">
+        <div class="content">
+          
+          <h3> Brief Explanation </h3>
+          <p> 
+            Optical flow vectors (u,v) were calculated over Horn & Schunck algorithm. 
+            Then, least square approximation was applied to estimate 6-parameters of the affine motion model.
+            Significant point here is the selection of appropriate pixels to solve the linear system.  
+          </p>
+          <p>
+            I have used non-intelligent or in other words video-specific method to pick the relavant pixels. 
+            The woody region in the scene is static but appears as moving in the flow field due to camera motion.
+            I thought, sampling pixels from this woody region is the simplest way to reach to the camera motion parameters. 
+          </p>
+            
+          <figure>
+            <img src="assets/latex/affine-model.png" width="370">
+            <figcaption>
+              Affine Motion Model
+            </figcaption>
+          </figure>
+
+          <p> 
+            Parameters of the 2D affine motion model can be classified into two: angular (a2,a3,a5,a6) and translational (a1,a4).
+            The effect of the pan and tilt motions are pixel displacements that relate to only translational parameters if the scene is far enough.
+            To illustrate, pan and tilt motions can be observed from a1 and a4, respectively. 
+            However, zoom required angular motion parameters to monitor the scale changes, (a2+a6)/2; 
+            and needs matrix multiplication with pixel coordinates to satisfy the equation.
+                       
+          </p>
+
+          <h3> Result </h3>
+          <p>
+          In the below demonstrations, you will see the optical flow field next to original video and extracted motion parameters at the bottom.
+          The colors in parameter values have an aim to simplify the observation. 
+          <ul>
+            <li><strong>RED</strong>  Positive</li>
+            <li><strong>BLACK</strong>  Zero</li>
+            <li><strong>BLUE</strong>  Negative </li>
+          </ul>  
+          </p>
+          <hr>
+
+          <h5 style="text-align: center;">
+            First, I have clipped a short sequence that the transition occurs: PAN (left), TILT (up), PAN (right). 
+          </h5>
+          
+          <figure>
+            <video controls autoplay loop>
+              <source src="assets/cam-motion-slow.mp4 " type="video/mp4">
+            </video>
+            <figcaption>
+              The transition of the camera motion in 5 frame/s 
+            </figcaption>
+          </figure>   
+          <hr>
+
+          <h5 style="text-align: center;">
+            Final Result
+          </h5>
+
+          <figure>
+            <video controls autoplay loop>
+              <source src="assets/cam-motion.mp4 " type="video/mp4">
+            </video>
+            <figcaption>
+              Full video sample in 30 frame/s 
+            </figcaption>
+          </figure>   
+
+  
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+
+
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>
+        April, 2021
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
